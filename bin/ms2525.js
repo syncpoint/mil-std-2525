@@ -4,6 +4,9 @@ const fs = require('fs')
 const R = require('ramda')
 const tables = require('./tables')
 
+const assign = Object.assign
+const entries = Object.entries
+const fromEntries = Object.fromEntries
 const split = delimiter => s => s.split(delimiter)
 const splitCRLF = split(/\r?\n/)
 const splitTAB = split(/\t/)
@@ -69,7 +72,11 @@ const collect = R.cond([
   [R.T, current]
 ])
 
+// Remove falsy value properties.
+const purge = (([k, v]) => [k, fromEntries(entries(v).filter(([, v]) => v))])
+
 const entry = context => R.compose(
+  purge,
   collect(context),
   isLegacy(context) ? geometry(8, 0) : geometry(5, 3),
   isLegacy(context) ? R.identity : fillgaps([0, 1]) // entity, entity type
@@ -82,7 +89,7 @@ const whitelist = xs => {
 }
 
 const parse = context => R.compose(
-  Object.fromEntries,
+  fromEntries,
   R.map(entry(context)),
   R.filter(whitelist),
   R.map(splitTAB),
@@ -97,6 +104,6 @@ const resolve = filename => path.join(__dirname, '../tsv-tables', filename)
 const json = tables
   .map(({ filename, ...context }) => ({ ...context, filename: resolve(filename) }))
   .flatMap(parse)
-  .reduce((a, b) => Object.assign(a, b), {})
+  .reduce((a, b) => assign(a, b), {})
 
 console.log(JSON.stringify(json, null, 2))

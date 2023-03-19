@@ -22,5 +22,8 @@
   "devDependencies": {
     "rollup": "^3.17.2",
     "rollup-plugin-string": "^3.0.0"
+  },
+  "dependencies": {
+    "ramda": "^0.28.0"
   }
 }
